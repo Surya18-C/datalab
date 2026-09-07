@@ -1,0 +1,19 @@
+# yaml-language-server: $schema=../../../schemas/domain_config.schema.json
+#
+# Domain settings — environment-agnostic by construction: catalog/schema
+# values are pipeline-conf KEYS resolved per target through bundle variables
+# (resources/rovia_ingestion_etl.pipeline.yml). Never put a literal catalog
+# name here.
+#
+# The folder name under config/rovia_ai_co_pilot_workspace/ must equal the
+# layer key below (the loader matches them 1:1) — the real Unity Catalog
+# schema is dev_bronze, so the layer key is dev_bronze too, not "bronze".
+schema_version: 1
+domain: rovia_ai_co_pilot_workspace
+imports: [] # no @transform/@check_function modules yet — bronze is raw passthrough
+catalog_conf: datalab.catalog
+layers:
+  dev_bronze:
+    schema_conf: datalab.bronze_schema
+    table_properties:
+      datalab.layer: bronze

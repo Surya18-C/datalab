@@ -1,0 +1,33 @@
+# yaml-language-server: $schema=../../../schemas/template_config.schema.json
+#
+# One parameterized bronze-ingest spec, instantiated once per atlas_prod
+# subfolder (see dev_bronze/atlas_tables.yml). This is the framework's
+# "classic bronze ingest fleet" pattern — N tables that differ only by name,
+# source path and source file format:
+# https://github.com/dediggibyte/datalab-framework/blob/main/docs/FRAMEWORK.md#add-many-tables--templates-template--parameter_sets
+#
+# Raw ingestion, source schema preserved: no `columns:` mapping at this
+# layer by design (bronze mirrors atlas_prod as-is; silver is where a
+# domain later adds column contracts + dqx rules per table, if needed).
+schema_version: 1
+parameters:
+  - name: table # sanitized atlas_prod subfolder name == target table name
+  - name: format # parquet | csv | json | avro | orc (per-table override)
+    default: parquet
+spec:
+  name: "${param.table}"
+  comment: "Raw ${param.table} feed ingested incrementally from s3://rovia-dms-s3-lake-databricks/atlas_prod/${param.table}/ (Auto Loader)."
+  source:
+    kind: cloud_files
+    # one conf key per table — path_conf must be a KEY (never a literal
+    # path); the actual s3:// value is resolved per table in
+    # resources/rovia_ingestion_etl.pipeline.yml `configuration:`, kept in
+    # sync by scripts/generate_bronze_tables.py.
+    path_conf: "datalab.landing_${param.table}"
+    format: "${param.format}"
+    options:
+      cloudFiles.schemaEvolutionMode: addNewColumns
+    add_lineage: true # framework adds _ingest_ts + _source_file
+  target:
+    kind: streaming_table
+    cluster_by_auto: true

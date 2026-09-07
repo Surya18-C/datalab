@@ -1,0 +1,1492 @@
+{
+  "$defs": {
+    "BackfillSpec": {
+      "additionalProperties": false,
+      "description": "A one-time historical load into the target (``once=True`` flow).\n\nRuns once, then idles in the graph as an audit trail \u2014 and re-runs\nautomatically on a FULL REFRESH to recreate its slice of the table.\nLeave it in the config after it completes; deleting it deletes that\ndata's recreation path.",
+      "properties": {
+        "comment": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Comment"
+        },
+        "name": {
+          "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+          "title": "Name",
+          "type": "string"
+        },
+        "source": {
+          "discriminator": {
+            "mapping": {
+              "cloud_files": "#/$defs/CloudFilesSource",
+              "files": "#/$defs/FileSource",
+              "kafka": "#/$defs/KafkaSource",
+              "python": "#/$defs/PythonSource",
+              "snapshot_function": "#/$defs/SnapshotFunctionSource",
+              "sql": "#/$defs/SqlSource",
+              "table": "#/$defs/TableSource",
+              "view": "#/$defs/ViewSource"
+            },
+            "propertyName": "kind"
+          },
+          "oneOf": [
+            {
+              "$ref": "#/$defs/CloudFilesSource"
+            },
+            {
+              "$ref": "#/$defs/FileSource"
+            },
+            {
+              "$ref": "#/$defs/TableSource"
+            },
+            {
+              "$ref": "#/$defs/ViewSource"
+            },
+            {
+              "$ref": "#/$defs/KafkaSource"
+            },
+            {
+              "$ref": "#/$defs/SnapshotFunctionSource"
+            },
+            {
+              "$ref": "#/$defs/SqlSource"
+            },
+            {
+              "$ref": "#/$defs/PythonSource"
+            }
+          ],
+          "title": "Source"
+        }
+      },
+      "required": [
+        "name",
+        "source"
+      ],
+      "title": "BackfillSpec",
+      "type": "object"
+    },
+    "CdcSpec": {
+      "additionalProperties": false,
+      "description": "AUTO CDC (``dp.create_auto_cdc_flow``) \u2014 upserts/SCD from a change feed.\n\nA CDC-fed streaming table accepts ONLY CDC flows (SDP rule): extra\n``sources:`` become further CDC flows and ``backfill:`` entries become\n``once`` CDC flows (whose sources must therefore be STREAMING).",
+      "properties": {
+        "apply_as_deletes": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Apply As Deletes"
+        },
+        "apply_as_truncates": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Apply As Truncates"
+        },
+        "column_list": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Column List",
+          "type": "array"
+        },
+        "except_columns": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Except Columns",
+          "type": "array"
+        },
+        "ignore_null_updates": {
+          "default": false,
+          "title": "Ignore Null Updates",
+          "type": "boolean"
+        },
+        "keys": {
+          "items": {
+            "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Keys",
+          "type": "array"
+        },
+        "scd_type": {
+          "default": 1,
+          "enum": [
+            1,
+            2
+          ],
+          "title": "Scd Type",
+          "type": "integer"
+        },
+        "sequence_by": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          ],
+          "title": "Sequence By"
+        },
+        "track_history_columns": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Track History Columns",
+          "type": "array"
+        },
+        "track_history_except_columns": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Track History Except Columns",
+          "type": "array"
+        }
+      },
+      "required": [
+        "keys",
+        "sequence_by"
+      ],
+      "title": "CdcSpec",
+      "type": "object"
+    },
+    "CloudFilesSource": {
+      "additionalProperties": false,
+      "description": "Streaming ingest from cloud storage via Auto Loader (``cloudFiles``).\n\nSDP manages schemaLocation/checkpoints itself; everything else from the\nAuto Loader option catalog goes in ``options:`` verbatim\n(``cloudFiles.inferColumnTypes``, ``cloudFiles.schemaEvolutionMode``,\n``cloudFiles.maxFilesPerTrigger``, per-format reader options, \u2026).",
+      "properties": {
+        "add_lineage": {
+          "default": true,
+          "title": "Add Lineage",
+          "type": "boolean"
+        },
+        "format": {
+          "default": "json",
+          "enum": [
+            "json",
+            "csv",
+            "parquet",
+            "avro",
+            "orc",
+            "text",
+            "xml",
+            "binaryFile"
+          ],
+          "title": "Format",
+          "type": "string"
+        },
+        "kind": {
+          "const": "cloud_files",
+          "title": "Kind",
+          "type": "string"
+        },
+        "options": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "default": {},
+          "title": "Options",
+          "type": "object"
+        },
+        "path_conf": {
+          "pattern": "^[A-Za-z][\\w.]*$",
+          "title": "Path Conf",
+          "type": "string"
+        },
+        "reader_schema": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reader Schema"
+        },
+        "schema_hints": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Schema Hints"
+        }
+      },
+      "required": [
+        "kind",
+        "path_conf"
+      ],
+      "title": "CloudFilesSource",
+      "type": "object"
+    },
+    "ColumnSpec": {
+      "additionalProperties": false,
+      "description": "One target-table column: source\u2192target mapping, data type, and the\ncolumn's own dqx rules. ``check.arguments.column`` is auto-filled with\nthe target column name.",
+      "properties": {
+        "comment": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Comment"
+        },
+        "name": {
+          "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+          "title": "Name",
+          "type": "string"
+        },
+        "quality": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/DQRule"
+          },
+          "title": "Quality",
+          "type": "array"
+        },
+        "source": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source"
+        },
+        "type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Type"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "ColumnSpec",
+      "type": "object"
+    },
+    "DQCheck": {
+      "additionalProperties": false,
+      "properties": {
+        "allow_column_arguments": {
+          "default": false,
+          "title": "Allow Column Arguments",
+          "type": "boolean"
+        },
+        "arguments": {
+          "default": {},
+          "title": "Arguments",
+          "type": "object"
+        },
+        "for_each_column": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "For Each Column"
+        },
+        "function": {
+          "title": "Function",
+          "type": "string"
+        }
+      },
+      "required": [
+        "function"
+      ],
+      "title": "DQCheck",
+      "type": "object"
+    },
+    "DQRule": {
+      "additionalProperties": false,
+      "properties": {
+        "check": {
+          "$ref": "#/$defs/DQCheck"
+        },
+        "criticality": {
+          "default": "error",
+          "enum": [
+            "error",
+            "warn"
+          ],
+          "title": "Criticality",
+          "type": "string"
+        },
+        "filter": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Filter"
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Name"
+        },
+        "user_metadata": {
+          "anyOf": [
+            {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "User Metadata"
+        }
+      },
+      "required": [
+        "check"
+      ],
+      "title": "DQRule",
+      "type": "object"
+    },
+    "DeltaSinkTarget": {
+      "additionalProperties": false,
+      "description": "Streaming append to a delta table/path OUTSIDE pipeline management\n(dp.create_sink + dp.append_flow). Prefer materialized_view for ordinary\nbatch tables \u2014 this is for external destinations only. NOTE (SDP): a full\nrefresh does NOT clear sink data; reprocessed rows are appended.",
+      "properties": {
+        "kind": {
+          "const": "delta_sink",
+          "title": "Kind",
+          "type": "string"
+        },
+        "options": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "default": {},
+          "title": "Options",
+          "type": "object"
+        },
+        "path_conf": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z][\\w.]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Path Conf"
+        },
+        "table_conf": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z][\\w.]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Table Conf"
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "title": "DeltaSinkTarget",
+      "type": "object"
+    },
+    "FileSource": {
+      "additionalProperties": false,
+      "description": "BATCH read of files (``spark.read.format(...).load(path)``) \u2014 for\nmaterialized views over file drops and for ``backfill:`` once-flows.\nFor incremental ingest use ``cloud_files`` instead.",
+      "properties": {
+        "format": {
+          "anyOf": [
+            {
+              "enum": [
+                "json",
+                "csv",
+                "parquet",
+                "avro",
+                "orc",
+                "text",
+                "xml",
+                "binaryFile"
+              ],
+              "type": "string"
+            },
+            {
+              "const": "delta",
+              "type": "string"
+            }
+          ],
+          "default": "parquet",
+          "title": "Format"
+        },
+        "kind": {
+          "const": "files",
+          "title": "Kind",
+          "type": "string"
+        },
+        "options": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "default": {},
+          "title": "Options",
+          "type": "object"
+        },
+        "path_conf": {
+          "pattern": "^[A-Za-z][\\w.]*$",
+          "title": "Path Conf",
+          "type": "string"
+        },
+        "reader_schema": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reader Schema"
+        }
+      },
+      "required": [
+        "kind",
+        "path_conf"
+      ],
+      "title": "FileSource",
+      "type": "object"
+    },
+    "FlowSource": {
+      "additionalProperties": false,
+      "description": "One named source flow of a multi-source (fan-in) streaming table.\n\n``name`` is part of the generated flow name \u2014 SDP uses the flow name as\nthe streaming-checkpoint identity, so RENAMING a flow abandons its\ncheckpoint and reprocesses from scratch. Pick stable names.",
+      "properties": {
+        "comment": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Comment"
+        },
+        "name": {
+          "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+          "title": "Name",
+          "type": "string"
+        },
+        "source": {
+          "discriminator": {
+            "mapping": {
+              "cloud_files": "#/$defs/CloudFilesSource",
+              "files": "#/$defs/FileSource",
+              "kafka": "#/$defs/KafkaSource",
+              "python": "#/$defs/PythonSource",
+              "snapshot_function": "#/$defs/SnapshotFunctionSource",
+              "sql": "#/$defs/SqlSource",
+              "table": "#/$defs/TableSource",
+              "view": "#/$defs/ViewSource"
+            },
+            "propertyName": "kind"
+          },
+          "oneOf": [
+            {
+              "$ref": "#/$defs/CloudFilesSource"
+            },
+            {
+              "$ref": "#/$defs/FileSource"
+            },
+            {
+              "$ref": "#/$defs/TableSource"
+            },
+            {
+              "$ref": "#/$defs/ViewSource"
+            },
+            {
+              "$ref": "#/$defs/KafkaSource"
+            },
+            {
+              "$ref": "#/$defs/SnapshotFunctionSource"
+            },
+            {
+              "$ref": "#/$defs/SqlSource"
+            },
+            {
+              "$ref": "#/$defs/PythonSource"
+            }
+          ],
+          "title": "Source"
+        }
+      },
+      "required": [
+        "name",
+        "source"
+      ],
+      "title": "FlowSource",
+      "type": "object"
+    },
+    "ForeachBatchSinkTarget": {
+      "additionalProperties": false,
+      "description": "Custom Python write per micro-batch (dp.foreach_batch_sink +\ndp.append_flow) \u2014 the escape hatch for destinations no built-in sink\ncovers. ``function`` names a ``@batch_sink``-registered handler\n``fn(df, batch_id, **args) -> None``; the handler IS the writer (there is\nno Spark writer to configure), runs on the DRIVER once per micro-batch,\nand must be idempotent on ``batch_id`` (micro-batches can be\nre-delivered; ``batch_id`` restarts at 0 on stream start / full refresh).\nStreaming only; Databricks SDP runtime only. Same SDP caveat as the other\nsinks: a full refresh never clears previously written sink data.",
+      "properties": {
+        "args": {
+          "default": {},
+          "title": "Args",
+          "type": "object"
+        },
+        "function": {
+          "title": "Function",
+          "type": "string"
+        },
+        "kind": {
+          "const": "foreach_batch_sink",
+          "title": "Kind",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "function"
+      ],
+      "title": "ForeachBatchSinkTarget",
+      "type": "object"
+    },
+    "KafkaSinkTarget": {
+      "additionalProperties": false,
+      "description": "Streaming append to a Kafka topic (dp.create_sink format=kafka +\ndp.append_flow) \u2014 also Kafka-compatible endpoints (Event Hubs, MSK).\n\nThe flow's frame must follow the Kafka writer contract: a ``value``\ncolumn (string/binary; ``framework.to_json_value`` packs rows for you),\noptional ``key``/``partition``/``headers``/``topic`` columns. Same SDP\ncaveat as delta_sink: full refresh never clears sink data.",
+      "properties": {
+        "bootstrap_servers_conf": {
+          "pattern": "^[A-Za-z][\\w.]*$",
+          "title": "Bootstrap Servers Conf",
+          "type": "string"
+        },
+        "kind": {
+          "const": "kafka_sink",
+          "title": "Kind",
+          "type": "string"
+        },
+        "options": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "default": {},
+          "title": "Options",
+          "type": "object"
+        },
+        "topic": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Topic"
+        }
+      },
+      "required": [
+        "kind",
+        "bootstrap_servers_conf"
+      ],
+      "title": "KafkaSinkTarget",
+      "type": "object"
+    },
+    "KafkaSource": {
+      "additionalProperties": false,
+      "description": "Streaming read from Kafka \u2014 including Kafka-compatible endpoints such\nas Azure Event Hubs' Kafka surface and AWS MSK.\n\nThe frame arrives with the Kafka wire schema (binary ``key``/``value``,\n``topic``, ``partition``, ``offset``, ``timestamp``); decode in\n``columns:``/``transform:``. Auth/tuning options (``kafka.security.*``,\n``startingOffsets``, ``maxOffsetsPerTrigger``, \u2026) pass through verbatim.",
+      "properties": {
+        "bootstrap_servers_conf": {
+          "pattern": "^[A-Za-z][\\w.]*$",
+          "title": "Bootstrap Servers Conf",
+          "type": "string"
+        },
+        "kind": {
+          "const": "kafka",
+          "title": "Kind",
+          "type": "string"
+        },
+        "options": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "default": {},
+          "title": "Options",
+          "type": "object"
+        },
+        "subscribe_pattern": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Subscribe Pattern"
+        },
+        "topic": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Topic"
+        }
+      },
+      "required": [
+        "kind",
+        "bootstrap_servers_conf"
+      ],
+      "title": "KafkaSource",
+      "type": "object"
+    },
+    "MaterializedViewTarget": {
+      "additionalProperties": false,
+      "properties": {
+        "cluster_by": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Cluster By",
+          "type": "array"
+        },
+        "cluster_by_auto": {
+          "default": false,
+          "title": "Cluster By Auto",
+          "type": "boolean"
+        },
+        "kind": {
+          "const": "materialized_view",
+          "title": "Kind",
+          "type": "string"
+        },
+        "partition_cols": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Partition Cols",
+          "type": "array"
+        },
+        "refresh_policy": {
+          "anyOf": [
+            {
+              "enum": [
+                "auto",
+                "incremental",
+                "incremental_strict",
+                "full"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Refresh Policy"
+        },
+        "schema": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Schema"
+        },
+        "table_properties": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "default": {},
+          "title": "Table Properties",
+          "type": "object"
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "title": "MaterializedViewTarget",
+      "type": "object"
+    },
+    "MetricsSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "default": false,
+          "title": "Enabled",
+          "type": "boolean"
+        },
+        "name": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Name"
+        },
+        "summary": {
+          "default": false,
+          "title": "Summary",
+          "type": "boolean"
+        }
+      },
+      "title": "MetricsSpec",
+      "type": "object"
+    },
+    "PythonSource": {
+      "additionalProperties": false,
+      "description": "A registered ``@dataframe_source`` function as the source frame \u2014 the\nescape hatch for sources no built-in reader covers (JDBC pulls, synthetic\nframes, custom connectors). The contract is\n``fn(spark, **args) -> DataFrame``: pure, read-only, no writes.\n\nSet ``as_stream: true`` when the function returns a STREAMING DataFrame\nso flow/target validation treats it as such.",
+      "properties": {
+        "args": {
+          "default": {},
+          "title": "Args",
+          "type": "object"
+        },
+        "as_stream": {
+          "default": false,
+          "title": "As Stream",
+          "type": "boolean"
+        },
+        "function": {
+          "title": "Function",
+          "type": "string"
+        },
+        "kind": {
+          "const": "python",
+          "title": "Kind",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "function"
+      ],
+      "title": "PythonSource",
+      "type": "object"
+    },
+    "QualitySpec": {
+      "additionalProperties": false,
+      "description": "TABLE-level quality config. Most rules belong on the columns\nthemselves (``columns[].quality``); this block carries multi-column /\ndataset-level checks and the quarantine/metrics/reference settings.",
+      "properties": {
+        "allow_streaming_dataset_checks": {
+          "default": false,
+          "title": "Allow Streaming Dataset Checks",
+          "type": "boolean"
+        },
+        "checks": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/DQRule"
+          },
+          "title": "Checks",
+          "type": "array"
+        },
+        "metrics": {
+          "$ref": "#/$defs/MetricsSpec",
+          "default": {
+            "enabled": false,
+            "name": null,
+            "summary": false
+          }
+        },
+        "quarantine": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/QuarantineSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "references": {
+          "default": {},
+          "patternProperties": {
+            "^[A-Za-z_][A-Za-z0-9_]*$": {
+              "$ref": "#/$defs/ReferenceSource"
+            }
+          },
+          "title": "References",
+          "type": "object"
+        }
+      },
+      "title": "QualitySpec",
+      "type": "object"
+    },
+    "QuarantineSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "default": true,
+          "title": "Enabled",
+          "type": "boolean"
+        },
+        "include_warnings": {
+          "default": false,
+          "title": "Include Warnings",
+          "type": "boolean"
+        },
+        "name": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Name"
+        },
+        "table_properties": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "default": {},
+          "title": "Table Properties",
+          "type": "object"
+        }
+      },
+      "title": "QuarantineSpec",
+      "type": "object"
+    },
+    "ReferenceSource": {
+      "additionalProperties": false,
+      "description": "A second table named declaratively, resolved per environment.\n\nUsed by dqx checks (``quality.references`` \u2192 ``ref_dfs``) and by a transform\nstep's ``tables:``. ``layer`` references the domain's layer\u2192schema mapping\n(domain.yml); the ``*_conf`` overrides are for tables outside this domain.\nAll are pipeline-conf KEYS \u2014 never literal catalog/schema names.",
+      "properties": {
+        "catalog_conf": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z][\\w.]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Catalog Conf"
+        },
+        "layer": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Layer"
+        },
+        "name": {
+          "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+          "title": "Name",
+          "type": "string"
+        },
+        "schema_conf": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z][\\w.]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Schema Conf"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "ReferenceSource",
+      "type": "object"
+    },
+    "SnapshotCdcSpec": {
+      "additionalProperties": false,
+      "description": "AUTO CDC FROM SNAPSHOT (``dp.create_auto_cdc_from_snapshot_flow``) \u2014\nSCD1/SCD2 computed by DIFFING successive full snapshots (keys absent from\nthe newest snapshot are deleted). Two patterns, chosen by the dataset's\n``source:``:\n\n* batch ``table``/``files``/``view`` source \u2192 the prepared frame is\n  re-read on every pipeline update (periodic snapshots);\n* ``snapshot_function`` source \u2192 a registered ``@snapshot_source``\n  function walks an historical snapshot set version by version.",
+      "properties": {
+        "keys": {
+          "items": {
+            "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Keys",
+          "type": "array"
+        },
+        "scd_type": {
+          "default": 1,
+          "enum": [
+            1,
+            2
+          ],
+          "title": "Scd Type",
+          "type": "integer"
+        },
+        "track_history_columns": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Track History Columns",
+          "type": "array"
+        },
+        "track_history_except_columns": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Track History Except Columns",
+          "type": "array"
+        }
+      },
+      "required": [
+        "keys"
+      ],
+      "title": "SnapshotCdcSpec",
+      "type": "object"
+    },
+    "SnapshotFunctionSource": {
+      "additionalProperties": false,
+      "description": "Historical snapshot sets for ``cdc_from_snapshot`` (pattern B): a\nregistered ``@snapshot_source`` function with the SDP contract\n``(latest_processed_version | None) -> (DataFrame, version) | None``.\nOnly valid with a ``streaming_table`` + ``cdc_from_snapshot`` target.",
+      "properties": {
+        "function": {
+          "title": "Function",
+          "type": "string"
+        },
+        "kind": {
+          "const": "snapshot_function",
+          "title": "Kind",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "function"
+      ],
+      "title": "SnapshotFunctionSource",
+      "type": "object"
+    },
+    "SqlSource": {
+      "additionalProperties": false,
+      "description": "A SQL query as the source frame (``spark.sql``) \u2014 BATCH semantics.\n\nReference same-pipeline datasets by their short name; for anything\noutside the pipeline use ``${conf:<key>}`` placeholders so catalogs and\nschemas stay per-environment (no hardcoded catalogs \u2014 ever)::\n\n    query: |\n      SELECT c.customer_id, c.city, o.total\n      FROM ${conf:datalab.catalog}.silver.customers c\n      JOIN ${conf:datalab.catalog}.silver.orders o USING (customer_id)\n\nSQL sources are batch: pair them with ``materialized_view`` /\n``temporary_view`` targets or non-CDC ``backfill:`` entries. For a\nstreaming read, use a ``table``/``view`` source with ``as_stream: true``\nand express the logic in ``transform:`` steps.",
+      "properties": {
+        "kind": {
+          "const": "sql",
+          "title": "Kind",
+          "type": "string"
+        },
+        "query": {
+          "title": "Query",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "query"
+      ],
+      "title": "SqlSource",
+      "type": "object"
+    },
+    "StreamingTableTarget": {
+      "additionalProperties": false,
+      "properties": {
+        "cdc": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CdcSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "cdc_from_snapshot": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SnapshotCdcSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "cluster_by": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Cluster By",
+          "type": "array"
+        },
+        "cluster_by_auto": {
+          "default": false,
+          "title": "Cluster By Auto",
+          "type": "boolean"
+        },
+        "kind": {
+          "const": "streaming_table",
+          "title": "Kind",
+          "type": "string"
+        },
+        "partition_cols": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Partition Cols",
+          "type": "array"
+        },
+        "replace_where": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Replace Where"
+        },
+        "schema": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Schema"
+        },
+        "table_properties": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "default": {},
+          "title": "Table Properties",
+          "type": "object"
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "title": "StreamingTableTarget",
+      "type": "object"
+    },
+    "TableSource": {
+      "additionalProperties": false,
+      "properties": {
+        "as_stream": {
+          "default": false,
+          "title": "As Stream",
+          "type": "boolean"
+        },
+        "catalog_conf": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z][\\w.]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Catalog Conf"
+        },
+        "change_data_feed": {
+          "default": false,
+          "title": "Change Data Feed",
+          "type": "boolean"
+        },
+        "kind": {
+          "const": "table",
+          "title": "Kind",
+          "type": "string"
+        },
+        "layer": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Layer"
+        },
+        "name": {
+          "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+          "title": "Name",
+          "type": "string"
+        },
+        "options": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "default": {},
+          "title": "Options",
+          "type": "object"
+        },
+        "schema_conf": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z][\\w.]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Schema Conf"
+        }
+      },
+      "required": [
+        "kind",
+        "name"
+      ],
+      "title": "TableSource",
+      "type": "object"
+    },
+    "TemporaryViewTarget": {
+      "additionalProperties": false,
+      "description": "Pipeline-scoped ('dynamic') view \u2014 no table is materialized.",
+      "properties": {
+        "kind": {
+          "const": "temporary_view",
+          "title": "Kind",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "title": "TemporaryViewTarget",
+      "type": "object"
+    },
+    "TransformStep": {
+      "additionalProperties": false,
+      "properties": {
+        "args": {
+          "default": {},
+          "title": "Args",
+          "type": "object"
+        },
+        "function": {
+          "title": "Function",
+          "type": "string"
+        },
+        "tables": {
+          "default": {},
+          "patternProperties": {
+            "^[A-Za-z_][A-Za-z0-9_]*$": {
+              "$ref": "#/$defs/ReferenceSource"
+            }
+          },
+          "title": "Tables",
+          "type": "object"
+        }
+      },
+      "required": [
+        "function"
+      ],
+      "title": "TransformStep",
+      "type": "object"
+    },
+    "ViewSource": {
+      "additionalProperties": false,
+      "description": "A temporary view generated earlier in the same pipeline.",
+      "properties": {
+        "as_stream": {
+          "default": true,
+          "title": "As Stream",
+          "type": "boolean"
+        },
+        "kind": {
+          "const": "view",
+          "title": "Kind",
+          "type": "string"
+        },
+        "name": {
+          "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+          "title": "Name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "name"
+      ],
+      "title": "ViewSource",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "config/<domain>/<layer>/<table>.yml \u2014 one target table per file.\n\nThe file name must equal the target table name; the layer comes from the\nfolder. Everything else is DatasetSpec.",
+  "properties": {
+    "backfill": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/BackfillSpec"
+      },
+      "title": "Backfill",
+      "type": "array"
+    },
+    "columns": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/ColumnSpec"
+      },
+      "title": "Columns",
+      "type": "array"
+    },
+    "comment": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Comment"
+    },
+    "name": {
+      "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+      "title": "Name",
+      "type": "string"
+    },
+    "operational_metadata": {
+      "default": true,
+      "title": "Operational Metadata",
+      "type": "boolean"
+    },
+    "quality": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/QualitySpec"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "source": {
+      "anyOf": [
+        {
+          "discriminator": {
+            "mapping": {
+              "cloud_files": "#/$defs/CloudFilesSource",
+              "files": "#/$defs/FileSource",
+              "kafka": "#/$defs/KafkaSource",
+              "python": "#/$defs/PythonSource",
+              "snapshot_function": "#/$defs/SnapshotFunctionSource",
+              "sql": "#/$defs/SqlSource",
+              "table": "#/$defs/TableSource",
+              "view": "#/$defs/ViewSource"
+            },
+            "propertyName": "kind"
+          },
+          "oneOf": [
+            {
+              "$ref": "#/$defs/CloudFilesSource"
+            },
+            {
+              "$ref": "#/$defs/FileSource"
+            },
+            {
+              "$ref": "#/$defs/TableSource"
+            },
+            {
+              "$ref": "#/$defs/ViewSource"
+            },
+            {
+              "$ref": "#/$defs/KafkaSource"
+            },
+            {
+              "$ref": "#/$defs/SnapshotFunctionSource"
+            },
+            {
+              "$ref": "#/$defs/SqlSource"
+            },
+            {
+              "$ref": "#/$defs/PythonSource"
+            }
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Source"
+    },
+    "sources": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/FlowSource"
+      },
+      "title": "Sources",
+      "type": "array"
+    },
+    "target": {
+      "discriminator": {
+        "mapping": {
+          "delta_sink": "#/$defs/DeltaSinkTarget",
+          "foreach_batch_sink": "#/$defs/ForeachBatchSinkTarget",
+          "kafka_sink": "#/$defs/KafkaSinkTarget",
+          "materialized_view": "#/$defs/MaterializedViewTarget",
+          "streaming_table": "#/$defs/StreamingTableTarget",
+          "temporary_view": "#/$defs/TemporaryViewTarget"
+        },
+        "propertyName": "kind"
+      },
+      "oneOf": [
+        {
+          "$ref": "#/$defs/StreamingTableTarget"
+        },
+        {
+          "$ref": "#/$defs/MaterializedViewTarget"
+        },
+        {
+          "$ref": "#/$defs/TemporaryViewTarget"
+        },
+        {
+          "$ref": "#/$defs/DeltaSinkTarget"
+        },
+        {
+          "$ref": "#/$defs/KafkaSinkTarget"
+        },
+        {
+          "$ref": "#/$defs/ForeachBatchSinkTarget"
+        }
+      ],
+      "title": "Target"
+    },
+    "transform": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/TransformStep"
+      },
+      "title": "Transform",
+      "type": "array"
+    }
+  },
+  "required": [
+    "name",
+    "target"
+  ],
+  "title": "TableFile",
+  "type": "object"
+}
