@@ -1,0 +1,72 @@
+# Declarative Automation Bundle (formerly Databricks Asset Bundle) for
+# Rovia_Ingestion. Docs: https://docs.databricks.com/aws/en/dev-tools/bundles/settings
+#
+# One-time prerequisite before the first deploy (catalog/schema/volume/UC
+# grants kept out of the bundle lifecycle so `bundle destroy` never touches
+# governance state) — see README.md "Prerequisites":
+#   * catalog rovia_ai_co_pilot_workspace, schema dev_bronze must exist
+#   * a Unity Catalog external location (or storage credential) must grant
+#     this workspace read access to s3://rovia-dms-s3-lake-databricks/atlas_prod
+#   * rovia_ai_co_pilot_workspace.artifacts.wheels volume must exist for the
+#     framework wheel (`make publish-wheel`)
+#
+# Validate / deploy / run:
+#   make validate   databricks bundle validate -t dev
+#   make deploy     databricks bundle deploy   -t dev
+#   make run        databricks bundle run rovia_ingestion_etl -t dev
+
+bundle:
+  name: rovia_ingestion
+
+variables:
+  catalog:
+    description: Unity Catalog catalog that holds the bronze schema.
+    default: rovia_ai_co_pilot_workspace
+  bronze_schema:
+    description: Schema for atlas_prod tables ingested as-is (bronze).
+    default: dev_bronze
+  atlas_landing_root:
+    description: >-
+      S3 root under which each subfolder is ingested as one bronze table
+      (informational — scripts/generate_bronze_tables.py reads this to
+      discover tables; the per-table s3:// paths actually wired to the
+      pipeline live in resources/rovia_ingestion_etl.pipeline.yml).
+    default: s3://rovia-dms-s3-lake-databricks/atlas_prod
+  # --- framework wheel distribution ------------------------------------
+  # The datalab FRAMEWORK ships as a versioned wheel built from the pinned
+  # git dep (make publish-wheel) and published into an `artifacts.wheels`
+  # UC Volume inside THIS project's catalog. Bump datalab_version in
+  # lockstep with the git dependency tag in pyproject.toml, then re-publish.
+  datalab_version:
+    description: Version of the datalab framework wheel installed from the catalog's artifacts.wheels volume.
+    default: "0.10.0"
+  datalab_wheel:
+    description: UC Volume path of the framework wheel.
+    default: /Volumes/${var.catalog}/artifacts/wheels/datalab-${var.datalab_version}-py3-none-any.whl
+
+artifacts:
+  rovia_ingestion_etl_wheel:
+    type: whl
+    build: uv build --wheel
+    path: .
+
+include:
+  - resources/*.yml
+
+# Dev-only surfaces kept OUT of the deployed workspace files (gitignore-style
+# globs, relative to the bundle root). Never exclude src/, config/, resources/,
+# pyproject.toml — the deploy + the pipeline need them.
+sync:
+  exclude:
+    - tests
+    - scripts
+    - docs
+    - README.md
+    - uv.lock
+
+targets:
+  dev:
+    mode: development
+    default: true
+    workspace:
+      host: https://dbc-81f292a5-d857.cloud.databricks.com
