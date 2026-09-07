@@ -1,0 +1,270 @@
+# Lakeflow Spark Declarative Pipeline for the rovia_ai_co_pilot_workspace
+# bronze domain — one Auto Loader streaming table per atlas_prod subfolder,
+# generated entirely from config/rovia_ai_co_pilot_workspace/. Source code:
+# src/rovia_ingestion_etl/transformations/pipeline.py (pyspark.pipelines).
+
+resources:
+  pipelines:
+    rovia_ingestion_etl:
+      name: rovia_ingestion_etl
+      catalog: ${var.catalog}
+      schema: ${var.bronze_schema}
+      serverless: true
+      channel: CURRENT
+      root_path: "../src/rovia_ingestion_etl"
+
+      libraries:
+        - glob:
+            include: ../src/rovia_ingestion_etl/transformations/**
+
+      environment:
+        dependencies:
+          # datalab FRAMEWORK wheel — installed from this project's own
+          # catalog volume (rovia_ai_co_pilot_workspace.artifacts.wheels).
+          # `make publish-wheel` uploads it; bump var.datalab_version to roll it.
+          - ${var.datalab_wheel}
+          # This domain's own wheel — built by the bundle's
+          # rovia_ingestion_etl_wheel artifact (uv build --wheel).
+          - ../dist/rovia_ingestion_etl-*.whl
+
+      # Surfaced to pipeline code as Spark conf — read via datalab.config.pipeline_conf.
+      configuration:
+        datalab.env: ${bundle.target}
+        datalab.catalog: ${var.catalog}
+        datalab.bronze_schema: ${var.bronze_schema}
+        # Where the framework finds this domain's layer YAMLs (deployed
+        # workspace files — see docs/FRAMEWORK.md in datalab-framework).
+        datalab.config_dir: ${workspace.file_path}/config/rovia_ai_co_pilot_workspace
+        # --- BEGIN GENERATED ATLAS_PROD LANDING PATHS ---
+        # Managed by scripts/generate_bronze_tables.py — one
+        # datalab.landing_<table> key per s3://.../atlas_prod/<table>/
+        # subfolder, matching path_conf in the atlas_bronze_ingest template.
+        # Do not hand-edit this block; re-run the script instead.
+        datalab.landing_campaign_rewards_v2: s3://rovia-dms-s3-lake-databricks/atlas_prod/campaign_rewards_v2/
+        datalab.landing_campaigns_v2: s3://rovia-dms-s3-lake-databricks/atlas_prod/campaigns_v2/
+        datalab.landing_cash_activity_sync_state: s3://rovia-dms-s3-lake-databricks/atlas_prod/cash_activity_sync_state/
+        datalab.landing_cdp_property_definitions_v2: s3://rovia-dms-s3-lake-databricks/atlas_prod/cdp_property_definitions_v2/
+        datalab.landing_channel_configs: s3://rovia-dms-s3-lake-databricks/atlas_prod/channel_configs/
+        datalab.landing_checkpoint_blobs: s3://rovia-dms-s3-lake-databricks/atlas_prod/checkpoint_blobs/
+        datalab.landing_checkpoint_migrations: s3://rovia-dms-s3-lake-databricks/atlas_prod/checkpoint_migrations/
+        datalab.landing_checkpoint_writes: s3://rovia-dms-s3-lake-databricks/atlas_prod/checkpoint_writes/
+        datalab.landing_checkpoints: s3://rovia-dms-s3-lake-databricks/atlas_prod/checkpoints/
+        datalab.landing_cip_records: s3://rovia-dms-s3-lake-databricks/atlas_prod/cip_records/
+        datalab.landing_cohort_outreach_attempt: s3://rovia-dms-s3-lake-databricks/atlas_prod/cohort_outreach_attempt/
+        datalab.landing_comparison_stock_list: s3://rovia-dms-s3-lake-databricks/atlas_prod/comparison_stock_list/
+        datalab.landing_corporate_actions: s3://rovia-dms-s3-lake-databricks/atlas_prod/corporate_actions/
+        datalab.landing_corporate_actions_sync_config: s3://rovia-dms-s3-lake-databricks/atlas_prod/corporate_actions_sync_config/
+        datalab.landing_daily_wallet_snapshots: s3://rovia-dms-s3-lake-databricks/atlas_prod/daily_wallet_snapshots/
+        datalab.landing_dividend_sync_state: s3://rovia-dms-s3-lake-databricks/atlas_prod/dividend_sync_state/
+        datalab.landing_document_jobs: s3://rovia-dms-s3-lake-databricks/atlas_prod/document_jobs/
+        datalab.landing_dtc_sync_state: s3://rovia-dms-s3-lake-databricks/atlas_prod/dtc_sync_state/
+        datalab.landing_dtc_transfers: s3://rovia-dms-s3-lake-databricks/atlas_prod/dtc_transfers/
+        datalab.landing_earnings_tracking: s3://rovia-dms-s3-lake-databricks/atlas_prod/earnings_tracking/
+        datalab.landing_email_notifications: s3://rovia-dms-s3-lake-databricks/atlas_prod/email_notifications/
+        datalab.landing_employer_broker_mappings: s3://rovia-dms-s3-lake-databricks/atlas_prod/employer_broker_mappings/
+        datalab.landing_eod_cash_interest: s3://rovia-dms-s3-lake-databricks/atlas_prod/eod_cash_interest/
+        datalab.landing_etf_fundamentals: s3://rovia-dms-s3-lake-databricks/atlas_prod/etf_fundamentals/
+        datalab.landing_etf_holdings: s3://rovia-dms-s3-lake-databricks/atlas_prod/etf_holdings/
+        datalab.landing_etf_metadata: s3://rovia-dms-s3-lake-databricks/atlas_prod/etf_metadata/
+        datalab.landing_etf_sector_weights: s3://rovia-dms-s3-lake-databricks/atlas_prod/etf_sector_weights/
+        datalab.landing_event_configs: s3://rovia-dms-s3-lake-databricks/atlas_prod/event_configs/
+        datalab.landing_exchange_rates: s3://rovia-dms-s3-lake-databricks/atlas_prod/exchange_rates/
+        datalab.landing_execution_logs: s3://rovia-dms-s3-lake-databricks/atlas_prod/execution_logs/
+        datalab.landing_external_brokerage_accounts: s3://rovia-dms-s3-lake-databricks/atlas_prod/external_brokerage_accounts/
+        datalab.landing_external_brokerage_lot_vest_events: s3://rovia-dms-s3-lake-databricks/atlas_prod/external_brokerage_lot_vest_events/
+        datalab.landing_external_brokerage_lots: s3://rovia-dms-s3-lake-databricks/atlas_prod/external_brokerage_lots/
+        datalab.landing_external_brokerage_parse_comparisons: s3://rovia-dms-s3-lake-databricks/atlas_prod/external_brokerage_parse_comparisons/
+        datalab.landing_external_brokerage_projection_summary: s3://rovia-dms-s3-lake-databricks/atlas_prod/external_brokerage_projection_summary/
+        datalab.landing_external_brokerage_statement_reparse_backfill_items: s3://rovia-dms-s3-lake-databricks/atlas_prod/external_brokerage_statement_reparse_backfill_items/
+        datalab.landing_external_brokerage_statement_uploads: s3://rovia-dms-s3-lake-databricks/atlas_prod/external_brokerage_statement_uploads/
+        datalab.landing_field_registry: s3://rovia-dms-s3-lake-databricks/atlas_prod/field_registry/
+        datalab.landing_financial_institutions: s3://rovia-dms-s3-lake-databricks/atlas_prod/financial_institutions/
+        datalab.landing_funding_banks: s3://rovia-dms-s3-lake-databricks/atlas_prod/funding_banks/
+        datalab.landing_funding_countries: s3://rovia-dms-s3-lake-databricks/atlas_prod/funding_countries/
+        datalab.landing_funding_country_bank_integrations: s3://rovia-dms-s3-lake-databricks/atlas_prod/funding_country_bank_integrations/
+        datalab.landing_funding_details: s3://rovia-dms-s3-lake-databricks/atlas_prod/funding_details/
+        datalab.landing_funding_quotes: s3://rovia-dms-s3-lake-databricks/atlas_prod/funding_quotes/
+        datalab.landing_funding_transfers: s3://rovia-dms-s3-lake-databricks/atlas_prod/funding_transfers/
+        datalab.landing_funding_wallets: s3://rovia-dms-s3-lake-databricks/atlas_prod/funding_wallets/
+        datalab.landing_gupshup_event_log: s3://rovia-dms-s3-lake-databricks/atlas_prod/gupshup_event_log/
+        datalab.landing_imported_lot_consumption_ledger: s3://rovia-dms-s3-lake-databricks/atlas_prod/imported_lot_consumption_ledger/
+        datalab.landing_imported_lot_ledger: s3://rovia-dms-s3-lake-databricks/atlas_prod/imported_lot_ledger/
+        datalab.landing_index_prices: s3://rovia-dms-s3-lake-databricks/atlas_prod/index_prices/
+        datalab.landing_interest_sync_state: s3://rovia-dms-s3-lake-databricks/atlas_prod/interest_sync_state/
+        datalab.landing_investment_account_balances: s3://rovia-dms-s3-lake-databricks/atlas_prod/investment_account_balances/
+        datalab.landing_investment_account_holdings: s3://rovia-dms-s3-lake-databricks/atlas_prod/investment_account_holdings/
+        datalab.landing_investment_account_transaction_sync_status: s3://rovia-dms-s3-lake-databricks/atlas_prod/investment_account_transaction_sync_status/
+        datalab.landing_investment_accounts: s3://rovia-dms-s3-lake-databricks/atlas_prod/investment_accounts/
+        datalab.landing_investment_holdings_refresh_requests: s3://rovia-dms-s3-lake-databricks/atlas_prod/investment_holdings_refresh_requests/
+        datalab.landing_journals: s3://rovia-dms-s3-lake-databricks/atlas_prod/journals/
+        datalab.landing_kyc_verification_record: s3://rovia-dms-s3-lake-databricks/atlas_prod/kyc_verification_record/
+        datalab.landing_live_stock_prices: s3://rovia-dms-s3-lake-databricks/atlas_prod/live_stock_prices/
+        datalab.landing_lot_corporate_action_queue: s3://rovia-dms-s3-lake-databricks/atlas_prod/lot_corporate_action_queue/
+        datalab.landing_lot_corporate_action_user_log: s3://rovia-dms-s3-lake-databricks/atlas_prod/lot_corporate_action_user_log/
+        datalab.landing_manual_transfer_activity_log: s3://rovia-dms-s3-lake-databricks/atlas_prod/manual_transfer_activity_log/
+        datalab.landing_manual_transfer_document_jobs: s3://rovia-dms-s3-lake-databricks/atlas_prod/manual_transfer_document_jobs/
+        datalab.landing_manual_transfer_securities: s3://rovia-dms-s3-lake-databricks/atlas_prod/manual_transfer_securities/
+        datalab.landing_manual_transfers: s3://rovia-dms-s3-lake-databricks/atlas_prod/manual_transfers/
+        datalab.landing_monthly_activity_statement_logs: s3://rovia-dms-s3-lake-databricks/atlas_prod/monthly_activity_statement_logs/
+        datalab.landing_notification_logs: s3://rovia-dms-s3-lake-databricks/atlas_prod/notification_logs/
+        datalab.landing_paysend_rate_snapshots: s3://rovia-dms-s3-lake-databricks/atlas_prod/paysend_rate_snapshots/
+        datalab.landing_peer_analytics_snapshot: s3://rovia-dms-s3-lake-databricks/atlas_prod/peer_analytics_snapshot/
+        datalab.landing_peer_analytics_snapshot_by_symbol: s3://rovia-dms-s3-lake-databricks/atlas_prod/peer_analytics_snapshot_by_symbol/
+        datalab.landing_personal_rm: s3://rovia-dms-s3-lake-databricks/atlas_prod/personal_rm/
+        datalab.landing_phone_otp_attempts: s3://rovia-dms-s3-lake-databricks/atlas_prod/phone_otp_attempts/
+        datalab.landing_pincode_state_mapping: s3://rovia-dms-s3-lake-databricks/atlas_prod/pincode_state_mapping/
+        datalab.landing_platform_cash_activities: s3://rovia-dms-s3-lake-databricks/atlas_prod/platform_cash_activities/
+        datalab.landing_platform_dividend_activities: s3://rovia-dms-s3-lake-databricks/atlas_prod/platform_dividend_activities/
+        datalab.landing_platform_interest_activities: s3://rovia-dms-s3-lake-databricks/atlas_prod/platform_interest_activities/
+        datalab.landing_platform_lot_consumption_ledger: s3://rovia-dms-s3-lake-databricks/atlas_prod/platform_lot_consumption_ledger/
+        datalab.landing_platform_lot_cost_basis_details: s3://rovia-dms-s3-lake-databricks/atlas_prod/platform_lot_cost_basis_details/
+        datalab.landing_platform_lot_ledger: s3://rovia-dms-s3-lake-databricks/atlas_prod/platform_lot_ledger/
+        datalab.landing_platform_lot_rebuild_request: s3://rovia-dms-s3-lake-databricks/atlas_prod/platform_lot_rebuild_request/
+        datalab.landing_platform_lot_review_staging: s3://rovia-dms-s3-lake-databricks/atlas_prod/platform_lot_review_staging/
+        datalab.landing_platform_popular_stocks: s3://rovia-dms-s3-lake-databricks/atlas_prod/platform_popular_stocks/
+        datalab.landing_platform_widgets: s3://rovia-dms-s3-lake-databricks/atlas_prod/platform_widgets/
+        datalab.landing_portfolio_refresh_requests: s3://rovia-dms-s3-lake-databricks/atlas_prod/portfolio_refresh_requests/
+        datalab.landing_posthog_cohort_member: s3://rovia-dms-s3-lake-databricks/atlas_prod/posthog_cohort_member/
+        datalab.landing_posthog_cohort_source: s3://rovia-dms-s3-lake-databricks/atlas_prod/posthog_cohort_source/
+        datalab.landing_provider_configs: s3://rovia-dms-s3-lake-databricks/atlas_prod/provider_configs/
+        datalab.landing_provider_institution_mapping: s3://rovia-dms-s3-lake-databricks/atlas_prod/provider_institution_mapping/
+        datalab.landing_provider_status: s3://rovia-dms-s3-lake-databricks/atlas_prod/provider_status/
+        datalab.landing_recipient_bank_provider_refs: s3://rovia-dms-s3-lake-databricks/atlas_prod/recipient_bank_provider_refs/
+        datalab.landing_recipient_banks: s3://rovia-dms-s3-lake-databricks/atlas_prod/recipient_banks/
+        datalab.landing_referral_codes: s3://rovia-dms-s3-lake-databricks/atlas_prod/referral_codes/
+        datalab.landing_referral_gold_coins: s3://rovia-dms-s3-lake-databricks/atlas_prod/referral_gold_coins/
+        datalab.landing_referral_qualification_checks: s3://rovia-dms-s3-lake-databricks/atlas_prod/referral_qualification_checks/
+        datalab.landing_referral_reward_logs: s3://rovia-dms-s3-lake-databricks/atlas_prod/referral_reward_logs/
+        datalab.landing_referrals: s3://rovia-dms-s3-lake-databricks/atlas_prod/referrals/
+        datalab.landing_remittance_funding_bank_accounts: s3://rovia-dms-s3-lake-databricks/atlas_prod/remittance_funding_bank_accounts/
+        datalab.landing_remittance_funding_beneficiaries: s3://rovia-dms-s3-lake-databricks/atlas_prod/remittance_funding_beneficiaries/
+        datalab.landing_remittance_funding_customers: s3://rovia-dms-s3-lake-databricks/atlas_prod/remittance_funding_customers/
+        datalab.landing_remittance_funding_orders: s3://rovia-dms-s3-lake-databricks/atlas_prod/remittance_funding_orders/
+        datalab.landing_review_intent: s3://rovia-dms-s3-lake-databricks/atlas_prod/review_intent/
+        datalab.landing_risk_assessment: s3://rovia-dms-s3-lake-databricks/atlas_prod/risk_assessment/
+        datalab.landing_risk_questions: s3://rovia-dms-s3-lake-databricks/atlas_prod/risk_questions/
+        datalab.landing_rm_callback_request: s3://rovia-dms-s3-lake-databricks/atlas_prod/rm_callback_request/
+        datalab.landing_rm_callback_topic: s3://rovia-dms-s3-lake-databricks/atlas_prod/rm_callback_topic/
+        datalab.landing_rm_slot_capacity: s3://rovia-dms-s3-lake-databricks/atlas_prod/rm_slot_capacity/
+        datalab.landing_rm_user_action: s3://rovia-dms-s3-lake-databricks/atlas_prod/rm_user_action/
+        datalab.landing_rsu_company_broker: s3://rovia-dms-s3-lake-databricks/atlas_prod/rsu_company_broker/
+        datalab.landing_rsu_insights: s3://rovia-dms-s3-lake-databricks/atlas_prod/rsu_insights/
+        datalab.landing_rsu_insights_execution_recommendation_orders: s3://rovia-dms-s3-lake-databricks/atlas_prod/rsu_insights_execution_recommendation_orders/
+        datalab.landing_rsu_insights_execution_recommendations: s3://rovia-dms-s3-lake-databricks/atlas_prod/rsu_insights_execution_recommendations/
+        datalab.landing_rsu_insights_manual_holdings: s3://rovia-dms-s3-lake-databricks/atlas_prod/rsu_insights_manual_holdings/
+        datalab.landing_rsu_insights_statement_holdings: s3://rovia-dms-s3-lake-databricks/atlas_prod/rsu_insights_statement_holdings/
+        datalab.landing_rsu_insights_statements: s3://rovia-dms-s3-lake-databricks/atlas_prod/rsu_insights_statements/
+        datalab.landing_rsu_symbol_stats: s3://rovia-dms-s3-lake-databricks/atlas_prod/rsu_symbol_stats/
+        datalab.landing_rsu_yield_accruals: s3://rovia-dms-s3-lake-databricks/atlas_prod/rsu_yield_accruals/
+        datalab.landing_rsu_yield_banner_impressions: s3://rovia-dms-s3-lake-databricks/atlas_prod/rsu_yield_banner_impressions/
+        datalab.landing_rsu_yield_campaigns: s3://rovia-dms-s3-lake-databricks/atlas_prod/rsu_yield_campaigns/
+        datalab.landing_rsu_yield_enrollments: s3://rovia-dms-s3-lake-databricks/atlas_prod/rsu_yield_enrollments/
+        datalab.landing_rsu_yield_settlements: s3://rovia-dms-s3-lake-databricks/atlas_prod/rsu_yield_settlements/
+        datalab.landing_rsu_yield_whitelist: s3://rovia-dms-s3-lake-databricks/atlas_prod/rsu_yield_whitelist/
+        datalab.landing_sbi_tt_rates: s3://rovia-dms-s3-lake-databricks/atlas_prod/sbi_tt_rates/
+        datalab.landing_schedule_fa_holdings: s3://rovia-dms-s3-lake-databricks/atlas_prod/schedule_fa_holdings/
+        datalab.landing_scheduler_config: s3://rovia-dms-s3-lake-databricks/atlas_prod/scheduler_config/
+        datalab.landing_security_cusip_mapping: s3://rovia-dms-s3-lake-databricks/atlas_prod/security_cusip_mapping/
+        datalab.landing_segments_v2: s3://rovia-dms-s3-lake-databricks/atlas_prod/segments_v2/
+        datalab.landing_sip_executions: s3://rovia-dms-s3-lake-databricks/atlas_prod/sip_executions/
+        datalab.landing_sip_plans: s3://rovia-dms-s3-lake-databricks/atlas_prod/sip_plans/
+        datalab.landing_sortment_event_samples: s3://rovia-dms-s3-lake-databricks/atlas_prod/sortment_event_samples/
+        datalab.landing_sortment_trigger_run_items: s3://rovia-dms-s3-lake-databricks/atlas_prod/sortment_trigger_run_items/
+        datalab.landing_sortment_trigger_runs: s3://rovia-dms-s3-lake-databricks/atlas_prod/sortment_trigger_runs/
+        datalab.landing_sp500_cagr_rankings: s3://rovia-dms-s3-lake-databricks/atlas_prod/sp500_cagr_rankings/
+        datalab.landing_sp500_constituents: s3://rovia-dms-s3-lake-databricks/atlas_prod/sp500_constituents/
+        datalab.landing_sse_event_tracking: s3://rovia-dms-s3-lake-databricks/atlas_prod/sse_event_tracking/
+        datalab.landing_stock_balance_sheet: s3://rovia-dms-s3-lake-databricks/atlas_prod/stock_balance_sheet/
+        datalab.landing_stock_cash_flow: s3://rovia-dms-s3-lake-databricks/atlas_prod/stock_cash_flow/
+        datalab.landing_stock_community_stats: s3://rovia-dms-s3-lake-databricks/atlas_prod/stock_community_stats/
+        datalab.landing_stock_earnings: s3://rovia-dms-s3-lake-databricks/atlas_prod/stock_earnings/
+        datalab.landing_stock_financials_sync_status: s3://rovia-dms-s3-lake-databricks/atlas_prod/stock_financials_sync_status/
+        datalab.landing_stock_fundamentals: s3://rovia-dms-s3-lake-databricks/atlas_prod/stock_fundamentals/
+        datalab.landing_stock_income_statement: s3://rovia-dms-s3-lake-databricks/atlas_prod/stock_income_statement/
+        datalab.landing_stock_insider_trading: s3://rovia-dms-s3-lake-databricks/atlas_prod/stock_insider_trading/
+        datalab.landing_stock_institutional_ownership: s3://rovia-dms-s3-lake-databricks/atlas_prod/stock_institutional_ownership/
+        datalab.landing_stock_intraday_prices: s3://rovia-dms-s3-lake-databricks/atlas_prod/stock_intraday_prices/
+        datalab.landing_stock_intraday_rollups: s3://rovia-dms-s3-lake-databricks/atlas_prod/stock_intraday_rollups/
+        datalab.landing_stock_prices: s3://rovia-dms-s3-lake-databricks/atlas_prod/stock_prices/
+        datalab.landing_stock_profile: s3://rovia-dms-s3-lake-databricks/atlas_prod/stock_profile/
+        datalab.landing_stock_sector_averages: s3://rovia-dms-s3-lake-databricks/atlas_prod/stock_sector_averages/
+        datalab.landing_symbol_community_seeds: s3://rovia-dms-s3-lake-databricks/atlas_prod/symbol_community_seeds/
+        datalab.landing_symbol_price_context: s3://rovia-dms-s3-lake-databricks/atlas_prod/symbol_price_context/
+        datalab.landing_testimonials: s3://rovia-dms-s3-lake-databricks/atlas_prod/testimonials/
+        datalab.landing_trading_calendar: s3://rovia-dms-s3-lake-databricks/atlas_prod/trading_calendar/
+        datalab.landing_trading_order_lot_selections: s3://rovia-dms-s3-lake-databricks/atlas_prod/trading_order_lot_selections/
+        datalab.landing_trading_orders: s3://rovia-dms-s3-lake-databricks/atlas_prod/trading_orders/
+        datalab.landing_trading_window_rules: s3://rovia-dms-s3-lake-databricks/atlas_prod/trading_window_rules/
+        datalab.landing_transaction_symbols: s3://rovia-dms-s3-lake-databricks/atlas_prod/transaction_symbols/
+        datalab.landing_transactions: s3://rovia-dms-s3-lake-databricks/atlas_prod/transactions/
+        datalab.landing_transfer_cost_basis_review: s3://rovia-dms-s3-lake-databricks/atlas_prod/transfer_cost_basis_review/
+        datalab.landing_transfer_cost_basis_review_evidence: s3://rovia-dms-s3-lake-databricks/atlas_prod/transfer_cost_basis_review_evidence/
+        datalab.landing_transfer_statement_mapping: s3://rovia-dms-s3-lake-databricks/atlas_prod/transfer_statement_mapping/
+        datalab.landing_user_alerts: s3://rovia-dms-s3-lake-databricks/atlas_prod/user_alerts/
+        datalab.landing_user_app_activity: s3://rovia-dms-s3-lake-databricks/atlas_prod/user_app_activity/
+        datalab.landing_user_brokerage_accounts: s3://rovia-dms-s3-lake-databricks/atlas_prod/user_brokerage_accounts/
+        datalab.landing_user_cdp_properties_v2: s3://rovia-dms-s3-lake-databricks/atlas_prod/user_cdp_properties_v2/
+        datalab.landing_user_credentials: s3://rovia-dms-s3-lake-databricks/atlas_prod/user_credentials/
+        datalab.landing_user_device_tokens: s3://rovia-dms-s3-lake-databricks/atlas_prod/user_device_tokens/
+        datalab.landing_user_document_notifications: s3://rovia-dms-s3-lake-databricks/atlas_prod/user_document_notifications/
+        datalab.landing_user_dtc_submissions: s3://rovia-dms-s3-lake-databricks/atlas_prod/user_dtc_submissions/
+        datalab.landing_user_employment_history: s3://rovia-dms-s3-lake-databricks/atlas_prod/user_employment_history/
+        datalab.landing_user_employment_profiles: s3://rovia-dms-s3-lake-databricks/atlas_prod/user_employment_profiles/
+        datalab.landing_user_financial_profiles: s3://rovia-dms-s3-lake-databricks/atlas_prod/user_financial_profiles/
+        datalab.landing_user_financial_provider_connections: s3://rovia-dms-s3-lake-databricks/atlas_prod/user_financial_provider_connections/
+        datalab.landing_user_financial_provider_sync_status: s3://rovia-dms-s3-lake-databricks/atlas_prod/user_financial_provider_sync_status/
+        datalab.landing_user_flow_intents: s3://rovia-dms-s3-lake-databricks/atlas_prod/user_flow_intents/
+        datalab.landing_user_identifiers: s3://rovia-dms-s3-lake-databricks/atlas_prod/user_identifiers/
+        datalab.landing_user_kyc_addresses: s3://rovia-dms-s3-lake-databricks/atlas_prod/user_kyc_addresses/
+        datalab.landing_user_kyc_contacts: s3://rovia-dms-s3-lake-databricks/atlas_prod/user_kyc_contacts/
+        datalab.landing_user_kyc_documents: s3://rovia-dms-s3-lake-databricks/atlas_prod/user_kyc_documents/
+        datalab.landing_user_kyc_profiles: s3://rovia-dms-s3-lake-databricks/atlas_prod/user_kyc_profiles/
+        datalab.landing_user_kyc_tokens: s3://rovia-dms-s3-lake-databricks/atlas_prod/user_kyc_tokens/
+        datalab.landing_user_lot_preferences: s3://rovia-dms-s3-lake-databricks/atlas_prod/user_lot_preferences/
+        datalab.landing_user_onboarding_disclosures: s3://rovia-dms-s3-lake-databricks/atlas_prod/user_onboarding_disclosures/
+        datalab.landing_user_onboarding_status: s3://rovia-dms-s3-lake-databricks/atlas_prod/user_onboarding_status/
+        datalab.landing_user_phone_contacts: s3://rovia-dms-s3-lake-databricks/atlas_prod/user_phone_contacts/
+        datalab.landing_user_portfolio_history: s3://rovia-dms-s3-lake-databricks/atlas_prod/user_portfolio_history/
+        datalab.landing_user_portfolio_holdings: s3://rovia-dms-s3-lake-databricks/atlas_prod/user_portfolio_holdings/
+        datalab.landing_user_price_predictions: s3://rovia-dms-s3-lake-databricks/atlas_prod/user_price_predictions/
+        datalab.landing_user_provider_mapping: s3://rovia-dms-s3-lake-databricks/atlas_prod/user_provider_mapping/
+        datalab.landing_user_recent_searches: s3://rovia-dms-s3-lake-databricks/atlas_prod/user_recent_searches/
+        datalab.landing_user_reviews_profile: s3://rovia-dms-s3-lake-databricks/atlas_prod/user_reviews_profile/
+        datalab.landing_user_risk_responses: s3://rovia-dms-s3-lake-databricks/atlas_prod/user_risk_responses/
+        datalab.landing_user_risk_scores: s3://rovia-dms-s3-lake-databricks/atlas_prod/user_risk_scores/
+        datalab.landing_user_rm_assignment: s3://rovia-dms-s3-lake-databricks/atlas_prod/user_rm_assignment/
+        datalab.landing_user_rsu_holdings: s3://rovia-dms-s3-lake-databricks/atlas_prod/user_rsu_holdings/
+        datalab.landing_user_symbol_subscriptions: s3://rovia-dms-s3-lake-databricks/atlas_prod/user_symbol_subscriptions/
+        datalab.landing_user_tax_profile_income: s3://rovia-dms-s3-lake-databricks/atlas_prod/user_tax_profile_income/
+        datalab.landing_user_tax_profiles: s3://rovia-dms-s3-lake-databricks/atlas_prod/user_tax_profiles/
+        datalab.landing_user_tax_provider_statuses: s3://rovia-dms-s3-lake-databricks/atlas_prod/user_tax_provider_statuses/
+        datalab.landing_user_taxbuddy_tokens: s3://rovia-dms-s3-lake-databricks/atlas_prod/user_taxbuddy_tokens/
+        datalab.landing_user_trusted_contacts: s3://rovia-dms-s3-lake-databricks/atlas_prod/user_trusted_contacts/
+        datalab.landing_users: s3://rovia-dms-s3-lake-databricks/atlas_prod/users/
+        datalab.landing_watchlist_items: s3://rovia-dms-s3-lake-databricks/atlas_prod/watchlist_items/
+        datalab.landing_watchlists: s3://rovia-dms-s3-lake-databricks/atlas_prod/watchlists/
+        datalab.landing_withdrawal_corridors: s3://rovia-dms-s3-lake-databricks/atlas_prod/withdrawal_corridors/
+        datalab.landing_withdrawal_currencies: s3://rovia-dms-s3-lake-databricks/atlas_prod/withdrawal_currencies/
+        datalab.landing_withdrawal_orders: s3://rovia-dms-s3-lake-databricks/atlas_prod/withdrawal_orders/
+        datalab.landing_withdrawal_quotes: s3://rovia-dms-s3-lake-databricks/atlas_prod/withdrawal_quotes/
+        datalab.landing_app_version_configs: s3://rovia-dms-s3-lake-databricks/atlas_prod/app_version_configs/
+        datalab.landing_asset_categories: s3://rovia-dms-s3-lake-databricks/atlas_prod/asset_categories/
+        datalab.landing_asset_search_log: s3://rovia-dms-s3-lake-databricks/atlas_prod/asset_search_log/
+        datalab.landing_asset_theme_symbols: s3://rovia-dms-s3-lake-databricks/atlas_prod/asset_theme_symbols/
+        datalab.landing_asset_themes: s3://rovia-dms-s3-lake-databricks/atlas_prod/asset_themes/
+        datalab.landing_asset_volatility: s3://rovia-dms-s3-lake-databricks/atlas_prod/asset_volatility/
+        datalab.landing_assets: s3://rovia-dms-s3-lake-databricks/atlas_prod/assets/
+        datalab.landing_automation_flows: s3://rovia-dms-s3-lake-databricks/atlas_prod/automation_flows/
+        datalab.landing_bank_directory: s3://rovia-dms-s3-lake-databricks/atlas_prod/bank_directory/
+        datalab.landing_brokerage_institutions: s3://rovia-dms-s3-lake-databricks/atlas_prod/brokerage_institutions/
+        datalab.landing_aml_screening_records: s3://rovia-dms-s3-lake-databricks/atlas_prod/aml_screening_records/
+        datalab.landing_analyst_estimates: s3://rovia-dms-s3-lake-databricks/atlas_prod/analyst_estimates/
+        datalab.landing_analytics_events: s3://rovia-dms-s3-lake-databricks/atlas_prod/analytics_events/
+        datalab.landing_analytics_events_flat: s3://rovia-dms-s3-lake-databricks/atlas_prod/analytics_events_flat/
+        datalab.landing_alert_conditions: s3://rovia-dms-s3-lake-databricks/atlas_prod/alert_conditions/
+        datalab.landing_alert_triggers: s3://rovia-dms-s3-lake-databricks/atlas_prod/alert_triggers/
+        datalab.landing_alpaca_agreement_generation_jobs: s3://rovia-dms-s3-lake-databricks/atlas_prod/alpaca_agreement_generation_jobs/
+        datalab.landing_admin_audit_logs: s3://rovia-dms-s3-lake-databricks/atlas_prod/admin_audit_logs/
+        datalab.landing_account_activities: s3://rovia-dms-s3-lake-databricks/atlas_prod/account_activities/
+        datalab.landing_acat_transfers: s3://rovia-dms-s3-lake-databricks/atlas_prod/acat_transfers/
+        # --- END GENERATED ATLAS_PROD LANDING PATHS ---

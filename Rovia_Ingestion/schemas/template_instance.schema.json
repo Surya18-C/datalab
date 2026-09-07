@@ -1,0 +1,31 @@
+{
+  "additionalProperties": false,
+  "description": "config/<domain>/<layer>/<file>.yml with a ``template:`` key \u2014 expands\nthe named template once per ``parameter_sets`` entry. The file name is\nfree (it does not name a single table); every generated dataset name must\nstill be unique within its layer.",
+  "properties": {
+    "parameter_sets": {
+      "items": {
+        "type": "object"
+      },
+      "minItems": 1,
+      "title": "Parameter Sets",
+      "type": "array"
+    },
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "template": {
+      "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+      "title": "Template",
+      "type": "string"
+    }
+  },
+  "required": [
+    "template",
+    "parameter_sets"
+  ],
+  "title": "TemplateInstanceFile",
+  "type": "object"
+}
